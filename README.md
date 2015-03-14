@@ -18,7 +18,7 @@ pyTranscribe is a minimalistic audio player providing features which simplify tr
 
 ##Installation
 
-It's just a python script: [download](pyTranscribe.py)
+It's just a python script: [download](https://raw.githubusercontent.com/bluenote10/pytranscribe/master/pyTranscribe.py)
 
 **Note:** This information probably no longer applies to recent version of Ubuntu. TODO: Update...
 
