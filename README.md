@@ -1,17 +1,26 @@
-#Features
+##Summary
+
+pyTranscribe is a minimalistic audio player providing features which simplify transcribing music (pitch shifting, precise fast forward/rewind, markers). 
+
+![image](screenshot.jpg)
+
+
+**Features:**
 
 - gstreamer based
 - supported file types: everything supported by gstreamer (mp3, ogg, videos, ...)
 - constant pitch tempo adjustment
-- precise/quick seeking (works for videos too!)
+- precise/quick seeking (works for videos too)
 - position marker system
 - simple keyboard controls
 - responsive user interface due to pygame 
 
 
-#Installation
+##Installation
 
-It's just a python script: download
+It's just a python script: [download](pyTranscribe.py)
+
+**Note:** This information probably no longer applies to recent version of Ubuntu. TODO: Update...
 
 Besides python you must have installed:
 
@@ -29,10 +38,7 @@ If you're running Ubuntu 9.04 this means you'll have to install these packages:
 Ubuntu 8.04/8.10 versions of gstreamer0.10-plugins-bad do not contain the required scaletempo/pitch plugins so you'll have to compile it manually.
 
 
-#Screenshot
-
-
-#Usage
+##Usage
 
 Start with:
 
