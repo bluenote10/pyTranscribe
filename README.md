@@ -15,6 +15,8 @@ pyTranscribe is a minimalistic audio player providing features which simplify tr
 - simple keyboard controls
 - responsive user interface due to pygame 
 
+Moved from: [code.google.com/p/pytranscribe](code.google.com/p/pytranscribe)
+
 
 ##Installation
 
