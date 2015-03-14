@@ -22,7 +22,7 @@ Moved from: [code.google.com/p/pytranscribe](code.google.com/p/pytranscribe)
 
 It's just a python script: [download](https://raw.githubusercontent.com/bluenote10/pytranscribe/master/pyTranscribe.py)
 
-**Note:** This information probably no longer applies to recent version of Ubuntu. TODO: Update...
+**Note:** Installation instructions last verfying for Ubuntu 14.04.
 
 Besides python you must have installed:
 
@@ -31,11 +31,11 @@ Besides python you must have installed:
 - python bindings for gstreamer
 - pygame 
 
-If you're running Ubuntu 9.04 this means you'll have to install these packages:
+If you're running Ubuntu 9.04 or later this means you'll have to install these packages:
 
-- gstreamer0.10-plugins-bad
-- python-gst0.10
-- python-pygame 
+- `gstreamer0.10-plugins-bad`
+- `python-gst0.10`
+- `python-pygame`
 
 Ubuntu 8.04/8.10 versions of gstreamer0.10-plugins-bad do not contain the required scaletempo/pitch plugins so you'll have to compile it manually.
 
