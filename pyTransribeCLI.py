@@ -42,9 +42,18 @@ def path2url(path):
     return urlparse.urljoin('file:', urllib.pathname2url(path))
 
 
-def callback(bus, msg):
-    GObject.MainLoop().quit()
-    sys.exit(0)
+def timestr_to_seconds(timestr):
+    l, r = timestr.split(":")
+    seconds = float(l) * 60 + float(r)
+    seconds_to_timestr(seconds)
+    return seconds
+
+
+def seconds_to_timestr(seconds):
+    m = int(seconds) // 60
+    s = seconds % 60
+    timestr = "{:02d}:{:02.3f}".format(m, s)
+    return timestr
 
 
 def build_bin(file_out, tempo, pitch):
@@ -92,12 +101,35 @@ def process_file(uri_in, file_out, tempo, pitch):
     bin = build_bin(file_out, tempo, pitch)
     playbin.set_property("audio-sink", bin)
 
+    done = [False]
+
+    def end_of_stream(bus, msg):
+        done[0] = True
+        pipeline.set_state(Gst.State.NULL)
+
     bus = pipeline.get_bus()
     bus.add_signal_watch()
-    bus.connect("message::eos", callback)
+    bus.connect("message::eos", end_of_stream)
+
+    loop = GObject.MainLoop()
+
+    def monitor():
+        print("handler")
+        print(done)
+        GObject.timeout_add(100, monitor)
+        if done[0]:
+            loop.quit()
+
+    GObject.timeout_add(100, monitor)
 
     pipeline.set_state(Gst.State.PLAYING)
-    GObject.MainLoop().run()
+    loop.run()
+
+    """
+    while not done[0]:
+        time.sleep(0.1)
+        print(done)
+    """
 
     """
     # Various attempts to query the playing status, what a mess...
@@ -120,6 +152,9 @@ def process_file(uri_in, file_out, tempo, pitch):
         time.sleep(0.1)
     """
 
+def post_process(file_out, tempo, trim_from, trim_upto):
+    import IPython; IPython.embed()
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Convert audio files with pitch/tempo modifications")
@@ -140,6 +175,20 @@ def parse_args():
         help="Tempo factor"
     )
     parser.add_argument(
+        "--from",
+        dest="trim_from",
+        type=str,
+        default=None,
+        help="Trim output from start",
+    )
+    parser.add_argument(
+        "--upto",
+        dest="trim_upto",
+        type=str,
+        default=None,
+        help="Trim output from end",
+    )
+    parser.add_argument(
         "--out",
         default=None,
         help="Name of output file (by default a suffix is added to the given input file)"
@@ -157,6 +206,12 @@ if __name__ == "__main__":
             args.tempo,
         )
 
+    if args.trim_from is not None:
+        args.trim_from = timestr_to_seconds(args.trim_from)
+    if args.trim_upto is not None:
+        args.trim_upto = timestr_to_seconds(args.trim_upto)
+
     # Apparently only the input file has to be an URI, not the output.
     args.file = path2url(args.file)
     process_file(args.file, args.out, args.tempo, args.pitch)
+    post_process(args.out, args.tempo, args.trim_from, args.trim_upto)
