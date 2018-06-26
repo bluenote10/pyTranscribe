@@ -101,35 +101,18 @@ def process_file(uri_in, file_out, tempo, pitch):
     bin = build_bin(file_out, tempo, pitch)
     playbin.set_property("audio-sink", bin)
 
-    done = [False]
+    loop = GObject.MainLoop()
 
     def end_of_stream(bus, msg):
-        done[0] = True
         pipeline.set_state(Gst.State.NULL)
+        loop.quit()
 
     bus = pipeline.get_bus()
     bus.add_signal_watch()
     bus.connect("message::eos", end_of_stream)
 
-    loop = GObject.MainLoop()
-
-    def monitor():
-        print("handler")
-        print(done)
-        GObject.timeout_add(100, monitor)
-        if done[0]:
-            loop.quit()
-
-    GObject.timeout_add(100, monitor)
-
     pipeline.set_state(Gst.State.PLAYING)
     loop.run()
-
-    """
-    while not done[0]:
-        time.sleep(0.1)
-        print(done)
-    """
 
     """
     # Various attempts to query the playing status, what a mess...
