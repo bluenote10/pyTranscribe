@@ -17,10 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import division, print_function
 
 import argparse
+import os
 import sys
-import time
 import urlparse
 import urllib
+import subprocess
 
 
 #argv = sys.argv
@@ -135,8 +136,32 @@ def process_file(uri_in, file_out, tempo, pitch):
         time.sleep(0.1)
     """
 
-def post_process(file_out, tempo, trim_from, trim_upto):
-    import IPython; IPython.embed()
+
+def post_process(wav_out, mp3_out, tempo, trim_from, trim_upto):
+    # https://stackoverflow.com/a/10418603/1804173
+    if trim_from is None:
+        trim_from_arg = "0"
+    else:
+        trim_from_arg = "={}".format(seconds_to_timestr(trim_from / tempo))
+    if trim_upto is None:
+        trim_upto_arg = "-0"
+    else:
+        trim_upto_arg = "={}".format(seconds_to_timestr(trim_upto / tempo))
+
+    process = subprocess.Popen([
+        "sox", wav_out, "/tmp/tmp.wav", "--show-progress", "trim", trim_from_arg, trim_upto_arg
+    ], stdout=sys.stdout, stderr=sys.stdout)
+    process.communicate()
+
+    process = subprocess.Popen([
+        "lame", "--preset", "standard", "/tmp/tmp.wav", mp3_out
+    ], stdout=sys.stdout, stderr=sys.stdout)
+    process.communicate()
+
+    process = subprocess.Popen([
+        "rm", wav_out
+    ], stdout=sys.stdout, stderr=sys.stdout)
+    process.communicate()
 
 
 def parse_args():
@@ -183,11 +208,13 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     if args.out is None:
-        args.out = "{} [{:+02.0f}, {}].wav".format(
+        args.out = "{} [{:+02.0f}, {}]".format(
             args.file[:-4],
             args.pitch,
             args.tempo,
         )
+    wav_out = args.out + ".wav"
+    mp3_out = args.out + ".mp3"
 
     if args.trim_from is not None:
         args.trim_from = timestr_to_seconds(args.trim_from)
@@ -196,5 +223,5 @@ if __name__ == "__main__":
 
     # Apparently only the input file has to be an URI, not the output.
     args.file = path2url(args.file)
-    process_file(args.file, args.out, args.tempo, args.pitch)
-    post_process(args.out, args.tempo, args.trim_from, args.trim_upto)
+    process_file(args.file, wav_out, args.tempo, args.pitch)
+    post_process(wav_out, mp3_out, args.tempo, args.trim_from, args.trim_upto)
