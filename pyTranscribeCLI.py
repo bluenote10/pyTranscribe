@@ -23,20 +23,12 @@ import urlparse
 import urllib
 import subprocess
 
-
-#argv = sys.argv
-# work around Gstreamer parsing sys.argv!
-#sys.argv = []
-
 import gi
 gi.require_version('Gst', '1.0')
-#from gi.repository import Gst
-from gi.repository import Gtk, GObject, Gst, Gio, Gdk
+from gi.repository import GObject, Gst
 
 GObject.threads_init()
 Gst.init(None)
-
-#sys.argv = argv
 
 
 def path2url(path):
@@ -105,6 +97,7 @@ def process_file(uri_in, file_out, tempo, pitch):
     loop = GObject.MainLoop()
 
     def end_of_stream(bus, msg):
+        print("Received end of stream")
         pipeline.set_state(Gst.State.NULL)
         loop.quit()
 
@@ -113,6 +106,7 @@ def process_file(uri_in, file_out, tempo, pitch):
     bus.connect("message::eos", end_of_stream)
 
     pipeline.set_state(Gst.State.PLAYING)
+    print("Starting loop...")
     loop.run()
 
     """
@@ -201,6 +195,11 @@ def parse_args():
         default=None,
         help="Name of output file (by default a suffix is added to the given input file)"
     )
+    parser.add_argument(
+        "--out-folder",
+        default=None,
+        help="Folder to place output file in (when not specifying --out explicitly)"
+    )
     args = parser.parse_args()
     return args
 
@@ -208,11 +207,19 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     if args.out is None:
-        args.out = "{} [{:+02.0f}, {}]".format(
-            args.file[:-4],
-            args.pitch,
-            args.tempo,
-        )
+        if args.out_folder is None:
+            args.out = "{} [{:+02.0f}, {}]".format(
+                args.file[:-4],
+                args.pitch,
+                args.tempo,
+            )
+        else:
+            args.out = "{}/{} [{:+02.0f}, {}]".format(
+                args.out_folder,
+                os.path.basename(args.file[:-4]),
+                args.pitch,
+                args.tempo,
+            )
     wav_out = args.out + ".wav"
     mp3_out = args.out + ".mp3"
 
@@ -220,6 +227,14 @@ if __name__ == "__main__":
         args.trim_from = timestr_to_seconds(args.trim_from)
     if args.trim_upto is not None:
         args.trim_upto = timestr_to_seconds(args.trim_upto)
+
+    # Unfortunately the gstreamer pipeline does simply hang forever
+    # if the input file does not exist. The error is only visible
+    # when running with `export GST_DEBUG=2`, so we better check
+    # this here.
+    if not os.path.exists(args.file):
+        print("Error: File '{}' does not exist.".format(args.file))
+        sys.exit(1)
 
     # Apparently only the input file has to be an URI, not the output.
     args.file = path2url(args.file)
