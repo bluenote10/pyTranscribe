@@ -19,9 +19,13 @@ from __future__ import division, print_function
 import argparse
 import os
 import sys
-import urlparse
 import urllib
 import subprocess
+
+try:
+    from urllib.parse import urljoin
+except ImportError:
+    from urlparse import urljoin
 
 import gi
 gi.require_version('Gst', '1.0')
@@ -32,7 +36,7 @@ Gst.init(None)
 
 
 def path2url(path):
-    return urlparse.urljoin('file:', urllib.pathname2url(path))
+    return urljoin('file:', urllib.pathname2url(path))
 
 
 def timestr_to_seconds(timestr):
